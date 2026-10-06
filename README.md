@@ -7,7 +7,7 @@ typhoons and cyclones) with their names, strength and tracks. There are no
 ads, no account and no API keys.
 
 **Download:** the latest build is always the **Vaanilai.apk** file on the
-[`weather-latest` release](https://github.com/Akrishna87/Akrishna87/releases/tag/weather-latest).
+[`weather-latest` release](https://github.com/Akrishna87/vaanilai/releases/tag/weather-latest).
 Open it on your phone and allow installing from your browser when asked.
 Each new build installs as an update over the last one.
 
@@ -97,12 +97,12 @@ The map outlines in `app/src/main/assets` are made by `tools/pack_map.py`
 from Natural Earth's 1:50m data.
 
 CI (`.github/workflows/weather-apk.yml`) builds the release APK on every push
-that touches `weather-android/`, signs it, and runs it on an Android 14
+to this repo, signs it, and runs it on an Android 14
 emulator (`ci/smoke-test.sh`): it searches for a place, then opens the
 forecast, wind map, storms and sources screens. It then publishes the APK to
 the `weather-latest` release along with the emulator's screenshots.
 
 **Signing:** release builds are signed with Isaialai's private key
-(`music-player-android/signing/release.keystore.gpg`, unlocked in CI with the
+(`signing/release.keystore.gpg` (a copy of Isaialai's key), unlocked in CI with the
 `SIGNING_PASSPHRASE` secret), the same key as the other apps here. See
-[`music-player-android/SECURITY.md`](../music-player-android/SECURITY.md).
+[Isaialai's SECURITY.md](https://github.com/Akrishna87/isaialai/blob/main/SECURITY.md).
