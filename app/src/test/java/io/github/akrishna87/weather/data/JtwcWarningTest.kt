@@ -102,8 +102,8 @@ class JtwcWarningTest {
             .replace("NEAR 12.0N 87.3E", "NEAR 8.9S 162.6W")
             .replace("REPEAT POSIT: 12.0N 87.3E", "REPEAT POSIT: 8.9S 162.6W")
             .replace(
-                "12 HRS, VALID AT:\n           171800Z --- 12.5N 86.8E",
-                "12 HRS, VALID AT:\n           171800Z --- 8.2S 163.9W")
+                "12 HRS, VALID AT:\n   171800Z --- 12.5N 86.8E",
+                "12 HRS, VALID AT:\n   171800Z --- 8.2S 163.9W")
         val s = parse(southern, "https://www.metoc.navy.mil/jtwc/products/sh0326web.txt")
         assertEquals("Xavier", s.name)
         assertEquals(-8.9, s.lat, 1e-9)
