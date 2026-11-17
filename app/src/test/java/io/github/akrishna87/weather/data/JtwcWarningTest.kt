@@ -55,12 +55,18 @@ class JtwcWarningTest {
         NNNN
     """.trimIndent()
 
-    private fun parseAkvan() = StormFeeds.parseJtwcWarning(
-        akvan, "https://www.metoc.navy.mil/jtwc/products/io0526web.txt")
+    private val akvanUrl = "https://www.metoc.navy.mil/jtwc/products/io0526web.txt"
+
+    /** Parses [text] and fails the test if it doesn't read as a storm. */
+    private fun parse(text: String = akvan, url: String = akvanUrl): Storm {
+        val s = StormFeeds.parseJtwcWarning(text, url)
+        assertNotNull("the warning should parse into a storm", s)
+        return s!!
+    }
 
     @Test
     fun readsNamePositionWindAndMovement() {
-        val s = assertNotNull(parseAkvan())
+        val s = parse()
         assertEquals("Akvan", s.name)
         assertEquals(12.0, s.lat, 1e-9)
         assertEquals(87.3, s.lon, 1e-9)
@@ -74,8 +80,8 @@ class JtwcWarningTest {
 
     @Test
     fun forecastPositionsBecomeTheTrack() {
-        val s = assertNotNull(parseAkvan())
-        val track = assertNotNull(s.track)
+        val s = parse()
+        val track = s.track!!
         assertEquals(4, track.points.size) // now + 12h + 24h + 72h
         val now = track.points.first()
         assertTrue(!now.forecast)
@@ -98,8 +104,7 @@ class JtwcWarningTest {
             .replace(
                 "12 HRS, VALID AT:\n           171800Z --- 12.5N 86.8E",
                 "12 HRS, VALID AT:\n           171800Z --- 8.2S 163.9W")
-        val s = assertNotNull(
-            StormFeeds.parseJtwcWarning(southern, "https://www.metoc.navy.mil/jtwc/products/sh0326web.txt"))
+        val s = parse(southern, "https://www.metoc.navy.mil/jtwc/products/sh0326web.txt")
         assertEquals("Xavier", s.name)
         assertEquals(-8.9, s.lat, 1e-9)
         assertEquals(-162.6, s.lon, 1e-9)
@@ -109,14 +114,13 @@ class JtwcWarningTest {
 
     @Test
     fun unnamedOrUnreadableWarningsAreSkipped() {
-        assertNull(StormFeeds.parseJtwcWarning("WTIO31 PGTW 170900\nnothing here", "https://x/yweb.txt"))
+        assertNull(StormFeeds.parseJtwcWarning("WTIO31 PGTW 170900\nnothing here", akvanUrl))
         val unnamed = """
             WTIO31 PGTW 170900
             SUBJ/TROPICAL DEPRESSION 05B WARNING NR 003//
             WARNING POSITION:
             170600Z --- NEAR 12.0N 87.3E
         """.trimIndent()
-        assertNull(
-            StormFeeds.parseJtwcWarning(unnamed, "https://www.metoc.navy.mil/jtwc/products/io0526web.txt"))
+        assertNull(StormFeeds.parseJtwcWarning(unnamed, akvanUrl))
     }
 }
