@@ -28,7 +28,9 @@ jobs:
         run: ./gradlew --no-daemon --stacktrace testDebugUnitTest
       - name: Build the APK
         env:
-          VERSION_CODE: ${{ github.run_number }}
+          # Offset so version codes continue above the last monorepo build
+          # (build 22, versionCode 22) instead of restarting at 1.
+          VERSION_CODE: ${{ github.run_number + 22 }}
         run: ./gradlew --no-daemon --stacktrace assembleRelease
       - name: Sign with Isaialai's private key
         env:
@@ -113,5 +115,5 @@ jobs:
           gh release create weather-latest out/Vaanilai.apk out/screens/*.png \
             --target "$GITHUB_SHA" \
             --prerelease \
-            --title "Vaanilai weather for Android (build ${{ github.run_number }})" \
+            --title "Vaanilai weather for Android (build ${{ github.run_number + 22 }})" \
             --notes "Download **Vaanilai.apk** on your Android phone, open it, and allow installing from your browser when asked. Each new build installs as an update over the last one. The PNG files are screenshots from the automatic emulator test of this build."
