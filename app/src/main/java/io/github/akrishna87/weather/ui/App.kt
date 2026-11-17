@@ -25,6 +25,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -34,6 +35,9 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import io.github.akrishna87.weather.WeatherViewModel
 
 private enum class Tab(val label: String, val icon: ImageVector) {
@@ -48,6 +52,7 @@ fun WeatherApp(vm: WeatherViewModel = viewModel()) {
     var tab by rememberSaveable { mutableIntStateOf(Tab.Weather.ordinal) }
     var handledFocus by rememberSaveable { mutableLongStateOf(0L) }
     val focus by vm.focus.collectAsState()
+    val foregroundScope = rememberCoroutineScope()
 
     // "Show on map" from a storm or the weather screen switches to the map (once per request).
     LaunchedEffect(focus?.seq) {
@@ -60,7 +65,13 @@ fun WeatherApp(vm: WeatherViewModel = viewModel()) {
 
     LifecycleResumeEffect(Unit) {
         vm.refreshIfStale()
-        onPauseOrDispose { }
+        val stormRefreshJob = foregroundScope.launch {
+            while (isActive) {
+                delay(5 * 60_000L)
+                vm.refreshStormsIfNeeded()
+            }
+        }
+        onPauseOrDispose { stormRefreshJob.cancel() }
     }
 
     // The Weather tab's sky and the wind map are dark, so the status bar icons there are light.

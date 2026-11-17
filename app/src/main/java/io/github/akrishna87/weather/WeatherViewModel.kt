@@ -219,7 +219,7 @@ class WeatherViewModel(app: Application) : AndroidViewModel(app) {
     /** Fetches the storms again if the last try failed (say the phone was offline) or is old. */
     fun refreshStormsIfNeeded() {
         val s = _storms.value
-        if (!s.loading && (s.error != null || System.currentTimeMillis() - s.updatedAt > 30 * 60_000)) refreshStorms()
+        if (!s.loading && (s.error != null || System.currentTimeMillis() - s.updatedAt > 5 * 60_000)) refreshStorms()
     }
 
     fun refreshWeather() {
