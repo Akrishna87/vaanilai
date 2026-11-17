@@ -4,8 +4,10 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-// CI passes the run number so every build installs as an update over the last one.
-val buildNumber = (System.getenv("VERSION_CODE") ?: "1").toInt()
+// CI passes its run number plus an offset so standalone builds stay above the former
+// monorepo Weather APK build 22 already installed by some users.
+val buildNumber = (System.getenv("VERSION_CODE") ?: "1").toInt() +
+    (System.getenv("VERSION_CODE_OFFSET") ?: "0").toInt()
 
 android {
     namespace = "io.github.akrishna87.weather"

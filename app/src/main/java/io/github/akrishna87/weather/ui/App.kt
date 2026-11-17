@@ -120,7 +120,7 @@ fun WeatherApp(vm: WeatherViewModel = viewModel()) {
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(bottom = padding.calculateBottomPadding())) {
             when (Tab.entries[tab]) {
-                Tab.Weather -> WeatherScreen(vm)
+                Tab.Weather -> WeatherScreen(vm) { tab = Tab.Storms.ordinal }
                 Tab.Wind -> WindMapScreen(vm)
                 Tab.Storms -> StormsScreen(vm)
                 Tab.Sources -> SourcesScreen(vm)
