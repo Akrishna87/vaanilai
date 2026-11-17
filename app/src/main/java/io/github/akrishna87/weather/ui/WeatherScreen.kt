@@ -126,7 +126,7 @@ import kotlin.math.roundToInt
 private const val NEARBY_STORM_KM = 2000.0
 
 @Composable
-fun WeatherScreen(vm: WeatherViewModel) {
+fun WeatherScreen(vm: WeatherViewModel, onOpenStorms: () -> Unit = {}) {
     val place by vm.place.collectAsState()
     val state by vm.weather.collectAsState()
     val units by vm.units.collectAsState()
@@ -190,6 +190,11 @@ fun WeatherScreen(vm: WeatherViewModel) {
 
                 items(nearby, key = { "storm-" + it.first.key }) { (storm, km) ->
                     NearbyStormCard(storm, km, p, units) { vm.showOnMap(storm) }
+                }
+                if (nearby.isEmpty() && storms.storms.isNotEmpty()) {
+                    item {
+                        WorldwideStormsCard(storms.storms.map { it.name }, onOpenStorms)
+                    }
                 }
                 items(state.alerts, key = { "alert-" + it.title + it.headline }) { AlertCard(it) }
                 state.error?.let { err -> item { ErrorCard(err) { vm.refreshWeather() } } }
@@ -427,6 +432,26 @@ private fun NearbyStormCard(storm: Storm, km: Double, p: Place, units: Units, on
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Text("Tap to see it on the wind map", style = MaterialTheme.typography.labelSmall, color = OnSkyDim)
+            }
+        }
+    }
+}
+
+@Composable
+private fun WorldwideStormsCard(names: List<String>, onOpenStorms: () -> Unit) {
+    val shownNames = names.take(3).joinToString(", ")
+    val more = names.size - 3
+    GlassCard(tint = Color(0xFFEF4444), alpha = 0.28f, onClick = onOpenStorms) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Outlined.Cyclone, null, tint = Color(0xFFFF7185), modifier = Modifier.size(30.dp))
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Named storms worldwide", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "$shownNames${if (more > 0) " + $more more" else ""}",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Text("Tap to view storm details and tracks", style = MaterialTheme.typography.labelSmall, color = OnSkyDim)
             }
         }
     }
