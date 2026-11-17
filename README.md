@@ -65,12 +65,14 @@ Each new build installs as an update over the last one.
 | US forecast and alerts | [National Weather Service](https://api.weather.gov) | Public domain |
 | Tropical cyclones in every ocean, tracks and wind areas | [GDACS](https://www.gdacs.org) (UN / European Commission) | Free to use with credit |
 | Atlantic and East/Central Pacific storms | [NOAA National Hurricane Center](https://www.nhc.noaa.gov) | Public domain |
+| Every ocean but the Atlantic, as text warnings | [US Joint Typhoon Warning Center](https://www.metoc.navy.mil/jtwc/) | Public domain |
 | Coastlines and borders (bundled in the app) | [Natural Earth](https://www.naturalearthdata.com) | Public domain |
 
 ## A few honest notes
 
 - **Which storms have names:** storm names come from the official
-  tropical-cyclone feeds (GDACS and NHC). Europe's named winter windstorms
+  tropical-cyclone feeds (GDACS, NHC and the US Joint Typhoon Warning Center).
+  Europe's named winter windstorms
   (named by the UK, Irish, Dutch and other weather services) have no free
   data feed, so they aren't labelled. Their strong winds still show on the
   wind map, and the gust forecast on the Weather screen warns about them.

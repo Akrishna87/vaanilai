@@ -57,6 +57,8 @@ data class StormsState(
     val loading: Boolean = false,
     val storms: List<Storm> = emptyList(),
     val error: String? = null,
+    /** A feed failed but others answered: the list may be incomplete rather than empty. */
+    val warning: String? = null,
     val updatedAt: Long = 0,
 )
 
@@ -216,10 +218,12 @@ class WeatherViewModel(app: Application) : AndroidViewModel(app) {
         refreshStormsIfNeeded()
     }
 
-    /** Fetches the storms again if the last try failed (say the phone was offline) or is old. */
+    /** Fetches the storms again if the last try failed or was incomplete (say the phone was
+     *  offline, or GDACS alone didn't answer), or is old. */
     fun refreshStormsIfNeeded() {
         val s = _storms.value
-        if (!s.loading && (s.error != null || System.currentTimeMillis() - s.updatedAt > 5 * 60_000)) refreshStorms()
+        if (!s.loading && (s.error != null || s.warning != null ||
+                System.currentTimeMillis() - s.updatedAt > 5 * 60_000)) refreshStorms()
     }
 
     fun refreshWeather() {
@@ -293,13 +297,19 @@ class WeatherViewModel(app: Application) : AndroidViewModel(app) {
         stormsJob = viewModelScope.launch {
             val g = async { tracked("gdacs", "GDACS", "Tropical cyclones in every ocean, with tracks") { StormFeeds.gdacs() } }
             val n = async { tracked("nhc", "NOAA National Hurricane Center", "Atlantic & East/Central Pacific storms") { StormFeeds.nhc() } }
+            val j = async { tracked("jtwc", "US Joint Typhoon Warning Center", "Every ocean but the Atlantic, when GDACS is unreachable") { StormFeeds.jtwc() } }
             val gs = g.await()
             val ns = n.await()
-            val merged = StormFeeds.merge(gs.orEmpty(), ns.orEmpty())
+            val js = j.await()
+            val merged = StormFeeds.merge(gs.orEmpty(), ns.orEmpty(), js.orEmpty())
             _storms.value = StormsState(
                 loading = false,
                 storms = merged,
-                error = if (gs == null && ns == null) "Couldn't reach the storm feeds. Check your connection." else null,
+                error = if (gs == null && ns == null && js == null) "Couldn't reach the storm feeds. Check your connection." else null,
+                // GDACS is the only feed with every ocean's storms; if it failed, what's left
+                // (if anything) isn't the whole picture, so say so instead of claiming emptiness.
+                warning = if (gs == null && (ns != null || js != null))
+                    "Couldn't reach GDACS, the global cyclone list — some storms, tracks and wind areas may be missing." else null,
                 updatedAt = System.currentTimeMillis(),
             )
             // Then fill in each storm's track.
