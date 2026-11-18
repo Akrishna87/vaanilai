@@ -44,6 +44,7 @@ Each new build installs as an update over the last one.
 - **Wind map**: thousands of particles drift with the wind, coloured by
   speed from calm blue to hurricane-force white, over a world map. You can:
   - pinch and drag to explore (it wraps around the date line);
+  - see major city names at country scale, with more places as you zoom in;
   - use the **time slider** to step through the next 48 hours;
   - switch between **Wind** and **Gusts**;
   - tap anywhere to read the wind speed and direction at that spot.
@@ -65,7 +66,7 @@ Each new build installs as an update over the last one.
 | US forecast and alerts | [National Weather Service](https://api.weather.gov) | Public domain |
 | Tropical cyclones in every ocean, tracks and wind areas | [GDACS](https://www.gdacs.org) (UN / European Commission) | Free to use with credit |
 | Atlantic and East/Central Pacific storms | [NOAA National Hurricane Center](https://www.nhc.noaa.gov) | Public domain |
-| Coastlines and borders (bundled in the app) | [Natural Earth](https://www.naturalearthdata.com) | Public domain |
+| Coastlines, borders and city labels (bundled in the app) | [Natural Earth](https://www.naturalearthdata.com) | Public domain |
 
 ## A few honest notes
 
@@ -94,7 +95,8 @@ This is a standard Gradle project (Kotlin, Jetpack Compose), built with JDK 17:
 ```
 
 The map outlines in `app/src/main/assets` are made by `tools/pack_map.py`
-from Natural Earth's 1:50m data.
+from Natural Earth's 1:50m data. See `tools/pack_cities.py` for the matching
+offline city data and how to regenerate it.
 
 CI (`.github/workflows/weather-apk.yml`) builds the release APK on every push
 to this repo, signs it, and runs it on an Android 14

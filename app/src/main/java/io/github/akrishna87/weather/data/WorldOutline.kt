@@ -6,13 +6,13 @@ import java.io.DataInputStream
 import java.io.EOFException
 
 /**
- * Coastlines and country borders for the wind map, from Natural Earth (public domain), bundled
+ * Coastlines, country borders and cities for the wind map, from Natural Earth (public domain), bundled
  * in the app so the map needs no tile server. `tools/pack_map.py` makes the files: each line is a
  * big-endian u16 point count, then that many (i16 lon, i16 lat) pairs in hundredths of a degree.
  *
  * The paths are in degrees with y = -latitude, so the map draws them with a single scale + translate.
  */
-class WorldOutline(val land: Path, val borders: Path) {
+internal class WorldOutline(val land: Path, val borders: Path, val cities: List<MapCity>) {
     companion object {
         @Volatile private var loaded: WorldOutline? = null
 
@@ -20,6 +20,7 @@ class WorldOutline(val land: Path, val borders: Path) {
             loaded ?: WorldOutline(
                 read(context, "land.bin", close = true),
                 read(context, "borders.bin", close = false),
+                context.assets.open("cities.tsv").bufferedReader().useLines { readMapCities(it) },
             ).also { loaded = it }
         }
 
