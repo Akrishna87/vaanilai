@@ -101,14 +101,24 @@ fun StormsScreen(vm: WeatherViewModel) {
                     }
                 }
             }
-            if (!state.loading && state.error == null && state.storms.isEmpty()) {
+            state.warning?.let { w ->
+                item {
+                    Surface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.tertiaryContainer) {
+                        Row(Modifier.padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(w, color = MaterialTheme.colorScheme.onTertiaryContainer, modifier = Modifier.weight(1f))
+                            TextButton(onClick = vm::refreshStorms) { Text("Try again") }
+                        }
+                    }
+                }
+            }
+            if (!state.loading && state.error == null && state.warning == null && state.storms.isEmpty()) {
                 item {
                     Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
                         Column(Modifier.fillMaxWidth().padding(28.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("🌤️", fontSize = 48.sp)
                             Text("No named storms right now", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 8.dp))
                             Text(
-                                "Checked GDACS (every ocean) and the US National Hurricane Center. The wind map still shows strong winds wherever they are.",
+                                "Checked GDACS (every ocean), the US National Hurricane Center and the US Joint Typhoon Warning Center. The wind map still shows strong winds wherever they are.",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(top = 8.dp),
@@ -121,7 +131,8 @@ fun StormsScreen(vm: WeatherViewModel) {
             item {
                 Text(
                     "Sources: GDACS (UN / European Commission) for every ocean, with tracks and wind areas; NOAA National Hurricane Center " +
-                        "for the latest official figures in the Atlantic and East/Central Pacific. Categories use the Saffir–Simpson scale. " +
+                        "for the latest official figures in the Atlantic and East/Central Pacific; the US Joint Typhoon Warning Center for " +
+                        "every other ocean when GDACS is unreachable. Categories use the Saffir–Simpson scale. " +
                         "Always follow your national weather service's warnings.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

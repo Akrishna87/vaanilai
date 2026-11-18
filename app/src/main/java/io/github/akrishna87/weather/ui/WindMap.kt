@@ -258,8 +258,8 @@ fun WindMapScreen(vm: WeatherViewModel) {
                     IconButton(onClick = { probe = null }, modifier = Modifier.size(24.dp)) { Icon(Icons.Outlined.Close, "Close", Modifier.size(16.dp)) }
                 }
             }
-            if (cam.showStorms && !stormsState.loading && stormsState.error == null && stormsState.storms.isEmpty()) {
-                MapPill { Text("No named storms are active anywhere right now") }
+            if (cam.showStorms && !stormsState.loading && stormsState.storms.isEmpty()) {
+                MapPill { Text(stormsState.warning ?: stormsState.error ?: "No named storms are active anywhere right now") }
             }
         }
 
