@@ -65,6 +65,8 @@ import io.github.akrishna87.weather.MapCamera
 import io.github.akrishna87.weather.WeatherViewModel
 import io.github.akrishna87.weather.data.GeoBox
 import io.github.akrishna87.weather.data.LatLon
+import io.github.akrishna87.weather.data.MapCity
+import io.github.akrishna87.weather.data.Place
 import io.github.akrishna87.weather.data.Storm
 import io.github.akrishna87.weather.data.Units
 import io.github.akrishna87.weather.data.WindField
@@ -110,8 +112,8 @@ fun WindMapScreen(vm: WeatherViewModel) {
     var selected by remember { mutableStateOf<String?>(null) }
     var probe by remember { mutableStateOf<Pair<LatLon, FloatArray?>?>(null) }
     val frame = remember { mutableLongStateOf(0L) }
-    val particles = remember { Particles(density) }
-    val painter = remember { MapPainter(density) }
+    val particles = remember(density) { Particles(density) }
+    val painter = remember(density) { MapPainter(density) }
 
     LaunchedEffect(Unit) {
         vm.refreshStormsIfNeeded()
@@ -213,6 +215,7 @@ fun WindMapScreen(vm: WeatherViewModel) {
             if (field != null) painter.drawHeat(this, cam, field, hourIndex(cam, field), cam.gusts)
             painter.drawCoasts(this, cam, world)
             particles.draw(this, cam)
+            world?.let { painter.drawCities(this, cam, it.cities, place) }
             painter.drawStorms(this, cam, storms, selected)
             place?.let { painter.drawPlace(this, cam, LatLon(it.lat, it.lon), it.name) }
             probe?.let { painter.drawProbe(this, cam, it.first) }
@@ -537,12 +540,19 @@ private class MapPainter(private val density: Float) {
         color = 0xFFFFFFFF.toInt(); textSize = 13f * density; typeface = Typeface.DEFAULT_BOLD
     }
     private val small = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFE5E7EB.toInt(); textSize = 11f * density }
+    private val cityText = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = 0xFFE5EDF7.toInt()
+        textSize = 11f * density
+        setShadowLayer(2f * density, 0f, 0f, 0xFF07101C.toInt())
+    }
     private val labelBg = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xCC0B1220.toInt() }
     private val rect = RectF()
     private val path = android.graphics.Path()
 
     private var heat: Bitmap? = null
     private var heatKey: Triple<WindField, Int, Boolean>? = null
+    private var cityKey: Pair<CityLabelViewport, Place?>? = null
+    private var cityLabels = emptyList<CityLabel>()
 
     fun drawBase(s: DrawScope, cam: MapCamera, world: WorldOutline?) {
         val c = s.drawContext.canvas.nativeCanvas
@@ -583,6 +593,29 @@ private class MapPainter(private val density: Float) {
 
     private fun x(cam: MapCamera, s: DrawScope, lon: Double) = ((lon - cam.lon) * cam.ppd + s.size.width / 2).toFloat()
     private fun y(cam: MapCamera, s: DrawScope, lat: Double) = ((cam.lat - lat) * cam.ppd + s.size.height / 2).toFloat()
+
+    fun drawCities(s: DrawScope, cam: MapCamera, cities: List<MapCity>, place: Place?) {
+        val view = CityLabelViewport(cam.lon, cam.lat, cam.ppd, s.size.width, s.size.height)
+        val key = view to place
+        if (cityKey != key) {
+            cityKey = key
+            val reserved = place?.let {
+                val x = view.x(it.lon)
+                val y = view.y(it.lat)
+                LabelBounds(
+                    x - 7f * density, y - 9f * density,
+                    x + 11f * density + small.measureText(it.name), y + 7f * density,
+                )
+            }
+            cityLabels = layoutCityLabels(cities, view, density, reserved, cityText::measureText)
+        }
+        val c = s.drawContext.canvas.nativeCanvas
+        dot.color = cityText.color
+        for (city in cityLabels) {
+            c.drawCircle(city.x, city.y, 2f * density, dot)
+            c.drawText(city.name, city.textX, city.y + 3f * density, cityText)
+        }
+    }
 
     /** A soft colour wash of wind speed under the particles, so storms stand out at a glance. */
     fun drawHeat(s: DrawScope, cam: MapCamera, f: WindField, hour: Int, gusts: Boolean) {
