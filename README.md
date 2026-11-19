@@ -49,7 +49,7 @@ Each new build installs as an update over the last one.
   - switch between **Wind** and **Gusts**;
   - tap anywhere to read the wind speed and direction at that spot.
 - **Named storms on the map**: each active tropical cyclone is drawn with a
-  spiral symbol, its **name** and category, and its track and wind areas.
+  rotating spiral symbol, its **name** and category, and its track and wind areas.
   Tap one for its details (wind, pressure, movement, distance from you)
   and a link to the official advisory.
 - **Storms**: a list of every active named storm in every ocean.

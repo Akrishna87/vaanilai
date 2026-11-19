@@ -1,5 +1,6 @@
 package io.github.akrishna87.weather.ui
 
+import android.animation.ValueAnimator
 import android.graphics.Bitmap
 import android.graphics.Paint
 import android.graphics.RectF
@@ -209,14 +210,17 @@ fun WindMapScreen(vm: WeatherViewModel) {
                     }
                 },
         ) {
-            frame.longValue // redraw every frame
+            val frameMs = frame.longValue // redraw every frame
             if (cam.ppd <= 0f) return@Canvas
             painter.drawBase(this, cam, world)
             if (field != null) painter.drawHeat(this, cam, field, hourIndex(cam, field), cam.gusts)
             painter.drawCoasts(this, cam, world)
             particles.draw(this, cam)
             world?.let { painter.drawCities(this, cam, it.cities, place) }
-            painter.drawStorms(this, cam, storms, selected)
+            if (storms.isNotEmpty()) {
+                val stormFrameMs = if (ValueAnimator.areAnimatorsEnabled()) frameMs else 0L
+                painter.drawStorms(this, cam, storms, selected, stormFrameMs)
+            }
             place?.let { painter.drawPlace(this, cam, LatLon(it.lat, it.lon), it.name) }
             probe?.let { painter.drawProbe(this, cam, it.first) }
         }
@@ -654,7 +658,7 @@ private class MapPainter(private val density: Float) {
         return Math.round((viewMid - boxMid) / 360.0) * 360.0
     }
 
-    fun drawStorms(s: DrawScope, cam: MapCamera, storms: List<Storm>, selected: String?) {
+    fun drawStorms(s: DrawScope, cam: MapCamera, storms: List<Storm>, selected: String?, frameMs: Long) {
         val c = s.drawContext.canvas.nativeCanvas
         val view = viewOf(s, cam)
         for (storm in storms) {
@@ -678,7 +682,7 @@ private class MapPainter(private val density: Float) {
                         c.drawCircle(x(cam, s, lon), y(cam, s, p.lat), 2.5f * density, dot)
                     }
                 }
-                drawStormMarker(c, x(cam, s, storm.lon + shift), y(cam, s, storm.lat), storm, storm.key == selected)
+                drawStormMarker(c, x(cam, s, storm.lon + shift), y(cam, s, storm.lat), storm, storm.key == selected, frameMs)
             }
         }
     }
@@ -704,18 +708,21 @@ private class MapPainter(private val density: Float) {
         return l
     }
 
-    /** A cyclone symbol: a ring with two curling arms, spun the right way for the hemisphere. */
-    private fun drawStormMarker(c: android.graphics.Canvas, cx: Float, cy: Float, storm: Storm, selected: Boolean) {
+    /** Only the arms rotate; the marker centre and label stay anchored to the storm's position. */
+    private fun drawStormMarker(
+        c: android.graphics.Canvas, cx: Float, cy: Float, storm: Storm, selected: Boolean, frameMs: Long,
+    ) {
         val r = (if (selected) 14f else 11f) * density
         val color = stormColor(storm.category)
         stormStroke.color = color
         dot.color = color
         c.drawCircle(cx, cy, r * 0.45f, dot)
         c.drawCircle(cx, cy, r * 0.8f, stormStroke)
-        val spin = if (storm.lat >= 0) -1f else 1f // anticlockwise in the north
+        val spin = cycloneSpinDirection(storm.lat)
+        val phase = cycloneSpinPhase(frameMs, spin)
         for (arm in 0..1) {
             path.reset()
-            val a0 = arm * Math.PI
+            val a0 = arm * Math.PI + phase
             path.moveTo(cx + (r * 0.8f * cos(a0)).toFloat(), cy + (r * 0.8f * sin(a0)).toFloat())
             for (step in 1..6) {
                 val a = a0 + spin * step * 0.35
